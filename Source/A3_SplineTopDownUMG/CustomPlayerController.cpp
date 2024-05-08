@@ -5,7 +5,7 @@
 
 ACustomPlayerController::ACustomPlayerController()
 {
-	UserWall = CreateDefaultSubobject<AWallGenerator>(TEXT("UserWall"));
+	
 	
 }
 
@@ -71,7 +71,7 @@ void ACustomPlayerController::GetLocation() {
 	}
 	else
 	{
-		DelegateLog.Execute(FString("No valid location found under the mouse cursor"), FColor::Red);
+		DelegateLog.Execute(FString("No valid location found under the mouse cursor"), FColor::Yellow);
 	}
 	
 }
@@ -80,40 +80,41 @@ void ACustomPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	DelegateLog.BindUFunction(this, FName("LogMessage"));
-	DelegateLog.Execute(FString("Message will be shown here"), FColor::Red);
+	DelegateLog.Execute(FString(""), FColor::White);
+	UserWall = GetWorld()->SpawnActor<AWallGenerator>();
 }
 
 void ACustomPlayerController::DestroyWallMesh()
 {
 	if (UserWall->DestroySplineMesh()) {
-		DelegateLog.Execute(FString("Wall Mesh Deleted Successfully"), FColor::Red);
+		DelegateLog.Execute(FString("Wall Mesh Deleted Successfully"), FColor::Green);
 	}
 	else {
-		DelegateLog.Execute(FString("No More Walls to Destroy"), FColor::Red);
+		DelegateLog.Execute(FString("No More Walls to Destroy"), FColor::Orange);
 	}
 }
 
 void ACustomPlayerController::DestroyWallComponent()
 {
 	if (UserWall->DestroyAllSplineMeshes()) {
-		DelegateLog.Execute(FString("Wall Component Deleted Successfully"), FColor::Red);
+		DelegateLog.Execute(FString("Wall Component Deleted Successfully"), FColor::Green);
 	}
 	else {
-		DelegateLog.Execute(FString("No More Walls to Destroy"), FColor::Red);
+		DelegateLog.Execute(FString("No More Walls to Destroy"), FColor::Orange);
 	}
 }
 
 void ACustomPlayerController::DestroyAllWalls()
 {
 	if (UserWall->DestroyAllSplineComponents()) {
-		DelegateLog.Execute(FString("Cleared Successfully"), FColor::Red);
+		DelegateLog.Execute(FString("Cleared Successfully"), FColor::Purple);
 	}
 }
 
 void ACustomPlayerController::GenerateNewWallComponent()
 {
-	if (UserWall->DestroySplineMesh()) {
-		DelegateLog.Execute(FString("New Wall Added"), FColor::Red);
+	if (UserWall->GenerateNewSplineComponent()) {
+		DelegateLog.Execute(FString("New Wall Added"), FColor::Green);
 	}
 }
 

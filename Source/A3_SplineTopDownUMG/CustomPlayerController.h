@@ -28,7 +28,6 @@ public:
 	AWallGenerator* UserWall;
 
 	void BeginPlay();
-
 protected:
 	void SetupInputComponent() override;
 	void GetLocation();

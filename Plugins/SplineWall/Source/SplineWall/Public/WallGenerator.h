@@ -59,9 +59,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool DestroyAllSplineComponents();
 
-protected:
+	UPROPERTY()
 	TArray<USplineComponent*> SplineComponents;
-	TArray<TArray<USplineMeshComponent*>> SplineMeshes;
-	int NumberOfSplinePoints;
-	int NumberOfMeshes;
+
+	UPROPERTY()
+	TArray<USplineMeshComponent*> SplineMeshes;
+
 };

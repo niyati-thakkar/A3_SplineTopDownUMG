@@ -38,6 +38,9 @@ public class SplineWall : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"InputCore",
+                "EnhancedInput",
+
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

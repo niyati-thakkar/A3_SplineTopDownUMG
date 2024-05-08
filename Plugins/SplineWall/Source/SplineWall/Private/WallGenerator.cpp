@@ -6,10 +6,10 @@
 // Sets default values
 AWallGenerator::AWallGenerator()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	
+
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("USceneComponent"));
 	RootComponent = SceneComponent;
 	SourceMesh = CreateDefaultSubobject<UStaticMesh>(TEXT("SourceMesh"));
@@ -31,32 +31,27 @@ AWallGenerator::AWallGenerator()
 			}
 		}
 	}
-	NumberOfMeshes = -1;
-	NumberOfSplinePoints = -1;
-	
+
 	USplineComponent* SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
 	SplineComponent->SetupAttachment(SceneComponent);
 	SplineComponent->AddRelativeLocation(FVector(0));
 	SplineComponent->ClearSplinePoints();
 	SplineComponents.Add(SplineComponent);
-	NumberOfSplinePoints++;
-	SplineMeshes.Add(TArray<USplineMeshComponent*>());
-	NumberOfMeshes = -1;
-	
+
 }
 
 // Called when the game starts or when spawned
 void AWallGenerator::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
 void AWallGenerator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%f %f"), SplineComponents.Num(), NumberOfSplinePoints));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%f %f"), SplineComponents.Num(), NumberOfSplineComponents));
 
 }
 
@@ -68,21 +63,26 @@ bool AWallGenerator::GenerateSplineMesh(FVector SplineLocation)
 	/*if (NumberOfMeshes == 1) {
 		SplineComponent->ClearSplinePoints();
 	}*/
-	
-	
-	
-	SplineLocation.Z = 0; 
-	//UE_LOG(LogTemp, Warning, TEXT("%f %f"), SplineComponents.Num(), NumberOfSplinePoints);
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("&d %d"), SplineComponents.Num(), NumberOfSplinePoints));
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("&d %d"), SplineMeshes.Num(), NumberOfMeshes));
-	USplineComponent* SplineComponent = SplineComponents[NumberOfSplinePoints];
+
+
+
+	SplineLocation.Z = 0;
+	//UE_LOG(LogTemp, Warning, TEXT("%f %f"), SplineComponents.Num(), NumberOfSplineComponents);
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("&d %d"), SplineComponents.Num(), NumberOfSplineComponents));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("&d %d"), SplineMeshes.Num(), NumberOfMeshes));
+	int32 SplineComponentIndex = SplineComponents.Num() - 1;
+	USplineComponent* SplineComponent = SplineComponents[SplineComponentIndex];
 	SplineComponent->AddSplinePoint(SplineLocation, ESplineCoordinateSpace::Local);
-	if (NumberOfMeshes++ == -1) {
+	int32 SplinePoints = SplineComponent->GetNumberOfSplinePoints();
+	if (SplinePoints == 1) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("add one more point") ));
 		return true;
 	}
+
 	FVector StartPos, EndPos, StartTangent, EndTangent;
-	SplineComponent->GetLocationAndTangentAtSplinePoint(NumberOfMeshes - 1, StartPos, StartTangent, ESplineCoordinateSpace::Local);
-	SplineComponent->GetLocationAndTangentAtSplinePoint(NumberOfMeshes, EndPos, EndTangent, ESplineCoordinateSpace::Local);
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%f"), index));
+	SplineComponent->GetLocationAndTangentAtSplinePoint(SplinePoints - 2, StartPos, StartTangent, ESplineCoordinateSpace::Local);
+	SplineComponent->GetLocationAndTangentAtSplinePoint(SplinePoints - 1, EndPos, EndTangent, ESplineCoordinateSpace::Local);
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%f %f %f"), StartPos.X, StartPos.Y, StartPos.Z));
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%f %f %f"), EndPos.X, EndPos.Y, EndPos.Z));
 
@@ -94,60 +94,64 @@ bool AWallGenerator::GenerateSplineMesh(FVector SplineLocation)
 	MeshComponent->SetupAttachment(SplineComponent);
 	MeshComponent->SetForwardAxis(SplineMeshAxis);
 
-	SplineMeshes[NumberOfSplinePoints].Add(MeshComponent);
+	SplineMeshes.Add(MeshComponent);
 	MeshComponent->SetRelativeScale3D(FVector(1));
-	NumberOfMeshes++;
 	return true;
 }
 
 bool AWallGenerator::DestroySplineMesh()
 {
-	if (NumberOfMeshes <= 0) {
+	
+	if (SplineMeshes.Num() == -1) {
 		return false;
 	}
-	if (NumberOfMeshes == 1) {
-		DestroyAllSplineMeshes();
-		return true;
-	}
-	USplineComponent* SplineComponent = SplineComponents[NumberOfSplinePoints];
-	if (SplineMeshes[NumberOfSplinePoints][NumberOfMeshes-1]) {
-		SplineMeshes[NumberOfSplinePoints][NumberOfMeshes-1]->DestroyComponent();
-		SplineMeshes[NumberOfSplinePoints][NumberOfMeshes-1] = nullptr;
-		SplineMeshes[NumberOfSplinePoints].RemoveAt(NumberOfMeshes-1);
+
+	int32 SplineComponentIndex = SplineComponents.Num() - 1;
+	USplineComponent* SplineComponent = SplineComponents[SplineComponentIndex];
+	int32 NumberOfMeshes = SplineComponent->GetNumberOfSplinePoints() - 1;
+	
+	if (NumberOfMeshes >= 1) {
+		int32 MeshIndex = SplineMeshes.Num() - 1;
+		SplineMeshes[MeshIndex]->DestroyComponent();
+		SplineMeshes[MeshIndex] = nullptr;
+		SplineMeshes.RemoveAt(MeshIndex);
 		SplineComponent->RemoveSplinePoint(NumberOfMeshes);
-		NumberOfMeshes--;
+		
 	}
-	
-	
+	if (NumberOfMeshes <= 1) {
+		SplineComponent->ClearSplinePoints();
+		SplineComponents[SplineComponentIndex]->DestroyComponent();
+		SplineComponents[SplineComponentIndex] = nullptr;
+		SplineComponents.RemoveAt(SplineComponentIndex);
+		if (SplineComponentIndex == 0) {
+			GenerateNewSplineComponent();
+		}
+		
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("%d"), NumberOfMeshes));
 	return true;
 }
 
 bool AWallGenerator::DestroyAllSplineMeshes()
 {
-	USplineComponent* SplineComponent = SplineComponents[NumberOfSplinePoints];
-	SplineComponent->ClearSplinePoints();
-	for (int i = 0; i < NumberOfMeshes; i++) {
-		SplineMeshes[NumberOfSplinePoints][i]->DestroyComponent();
-		SplineMeshes[NumberOfSplinePoints][i] = nullptr;
+	int32 SplineComponentIndex = SplineComponents.Num() - 1;
+	USplineComponent* SplineComponent = SplineComponents[SplineComponentIndex];
+	int32 SplinePoints = SplineComponent->GetNumberOfSplinePoints();
+	if (SplinePoints == 0) {
+		return DestroySplineMesh();
 	}
-	SplineMeshes.RemoveAt(NumberOfSplinePoints);
-	SplineComponents.Remove(SplineComponent);
-	SplineComponent->DestroyComponent();
-	SplineComponent = nullptr;
-	NumberOfSplinePoints--;
-	if (NumberOfSplinePoints == -1) {
-		GenerateNewSplineComponent();
-		return false;
+	while (SplinePoints-- > 1) {
+		DestroySplineMesh();
 	}
-	NumberOfMeshes = SplineComponents[NumberOfSplinePoints]->GetNumberOfSplinePoints()-1;
 	return true;
 }
 
 bool AWallGenerator::DestroyAllSplineComponents()
 {
 
-	int32 components = NumberOfSplinePoints;
-	while (components-- >= 0) {
+	int32 SplineComponentIndex = SplineComponents.Num() - 1;
+	if (SplineComponentIndex == -1) return false;
+	while (SplineComponentIndex-- >= 0) {
 		DestroyAllSplineMeshes();
 	}
 	return true;
@@ -156,15 +160,21 @@ bool AWallGenerator::DestroyAllSplineComponents()
 
 bool AWallGenerator::GenerateNewSplineComponent()
 {
+	int32 SplineComponentIndex = SplineComponents.Num() - 1;
+	
+	if (SplineComponentIndex >= 0){
+		USplineComponent* SplineComponent = SplineComponents[SplineComponentIndex];
+		if (SplineComponent->GetNumberOfSplinePoints() <= 1) {
+			SplineComponent->ClearSplinePoints();
+			return true;
+		}
+	}
 
-	USplineComponent* SplineComponent =NewObject<USplineComponent>();
+	USplineComponent* SplineComponent = NewObject<USplineComponent>();
 	SplineComponent->AttachToComponent(SceneComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	SplineComponent->AddRelativeLocation(FVector(0));
 	SplineComponent->ClearSplinePoints();
 	SplineComponents.Add(SplineComponent);
-	SplineMeshes.Add(TArray<USplineMeshComponent*>());
-	NumberOfMeshes = -1;
-	NumberOfSplinePoints++;
 	return true;
 
 }

@@ -8,7 +8,7 @@ public class A3_SplineTopDownUMG : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "SplineWall" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "SplineWall", "UMG", });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
